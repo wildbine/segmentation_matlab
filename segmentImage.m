@@ -1,12 +1,26 @@
-function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGB)
+function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGBAfter, RGBBefore)
+    % Convert RGB images to grayscale
+    grayAfter = rgb2gray(RGBAfter);
+    grayBefore = rgb2gray(RGBBefore);
+
+    % Compute the difference image
+    diffImage = imabsdiff(grayAfter, grayBefore);
+
+    % Threshold the difference image
+    diffBW = imbinarize(diffImage, 'adaptive', 'Sensitivity', 0.9, 'ForegroundPolarity', 'bright');
+
+    % Combine the difference mask with original processing
     % Convert RGB image into L*a*b* color space.
-    X = rgb2lab(RGB);
+    X = rgb2lab(RGBAfter);
 
     % Threshold image with adaptive threshold
-    BW = imbinarize(im2gray(RGB), 'adaptive', 'Sensitivity', 0.63, 'ForegroundPolarity', 'bright');
+    BW = imbinarize(rgb2gray(RGBAfter), 'adaptive', 'Sensitivity', 0.63, 'ForegroundPolarity', 'bright');
 
     % Invert mask
     BW = imcomplement(BW);
+
+    % Combine with the difference mask
+    BW = BW & diffBW;
 
     % Fill holes
     BW = imfill(BW, 'holes');
@@ -43,7 +57,7 @@ function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGB)
     BW = bwareaopen(BW, 500);
 
     % Create masked image
-    maskedImage = RGB;
+    maskedImage = RGBAfter;
     maskedImage(repmat(~BW, [1 1 3])) = 0;
 
     % Label connected components
@@ -67,12 +81,14 @@ function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGB)
 
     % Display the number of clusters
     fprintf('Number of clusters: %d\n', numClusters);
+    
+    % Создаем массив для хранения меток кластеров
+    clusterLabels = cell(1, numClusters);
 
-% Создаем массив для хранения меток кластеров
-clusterLabels = cell(1, numClusters);
-
-% Проходим по всем меткам кластеров и сохраняем их в массив
-for i = 1:numClusters
-    clusterLabels{i} = labeledImage == i;
-save('cluster_labels.mat', 'clusterLabels');
+    % Проходим по всем меткам кластеров и сохраняем их в массив
+    for i = 1:numClusters
+        clusterLabels{i} = labeledImage == i;
+    end
+    
+    save('cluster_labels.mat', 'clusterLabels');
 end
