@@ -47,7 +47,7 @@ function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGBAfter, R
     BW = imfill(BW, 'holes');
 
     % Active contour
-    iterations = 100;
+    iterations = 50;
     BW = activecontour(X, BW, iterations, 'Chan-Vese');
 
     % Fill holes again for larger regions
