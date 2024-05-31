@@ -3,13 +3,31 @@ function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGBAfter, R
     grayAfter = rgb2gray(RGBAfter);
     grayBefore = rgb2gray(RGBBefore);
 
-    % Compute the difference image
-    diffImage = imabsdiff(grayAfter, grayBefore);
+    % Compute texture features using GLCM
+    glcmAfter = graycomatrix(grayAfter);
+    glcmBefore = graycomatrix(grayBefore);
 
-    % Threshold the difference image
-    diffBW = imbinarize(diffImage, 'adaptive', 'Sensitivity', 0.9, 'ForegroundPolarity', 'bright');
+    statsAfter = graycoprops(glcmAfter, {'Contrast', 'Correlation', 'Energy', 'Homogeneity'});
+    statsBefore = graycoprops(glcmBefore, {'Contrast', 'Correlation', 'Energy', 'Homogeneity'});
 
-    % Combine the difference mask with original processing
+    % Combine texture features into a single measure
+    textureDifference.Contrast = abs(statsAfter.Contrast - statsBefore.Contrast);
+    textureDifference.Correlation = abs(statsAfter.Correlation - statsBefore.Correlation);
+    textureDifference.Energy = abs(statsAfter.Energy - statsBefore.Energy);
+    textureDifference.Homogeneity = abs(statsAfter.Homogeneity - statsBefore.Homogeneity);
+
+    % Combine all texture differences into one image
+    combinedTextureDifference = textureDifference.Contrast + ...
+                                textureDifference.Correlation + ...
+                                textureDifference.Energy + ...
+                                textureDifference.Homogeneity;
+
+    % Normalize the combined texture difference to the range [0, 1]
+    combinedTextureDifference = mat2gray(combinedTextureDifference);
+
+    % Threshold the combined texture difference
+    textureBW = imbinarize(combinedTextureDifference, 'adaptive', 'Sensitivity', 0.9, 'ForegroundPolarity', 'bright');
+
     % Convert RGB image into L*a*b* color space.
     X = rgb2lab(RGBAfter);
 
@@ -19,8 +37,8 @@ function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGBAfter, R
     % Invert mask
     BW = imcomplement(BW);
 
-    % Combine with the difference mask
-    BW = BW & diffBW;
+    % Combine with the texture difference mask
+    BW = BW & textureBW;
 
     % Fill holes
     BW = imfill(BW, 'holes');
@@ -81,14 +99,14 @@ function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGBAfter, R
 
     % Display the number of clusters
     fprintf('Number of clusters: %d\n', numClusters);
-    
-    % Создаем массив для хранения меток кластеров
+
+    % Create an array to store cluster labels
     clusterLabels = cell(1, numClusters);
 
-    % Проходим по всем меткам кластеров и сохраняем их в массив
+    % Loop through all cluster labels and save them in the array
     for i = 1:numClusters
         clusterLabels{i} = labeledImage == i;
     end
-    
+
     save('cluster_labels.mat', 'clusterLabels');
 end

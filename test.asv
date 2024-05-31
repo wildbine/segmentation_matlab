@@ -44,14 +44,14 @@ diffImage = diffContrast + diffCorrelation + diffEnergy + diffHomogeneity;
 diffImage = mat2gray(diffImage); % Нормализация разностного изображения
 
 figure;
-disp(diffImage);
+imshow(diffImage);
 title('Difference Image Based on Texture Analysis');
 
 % Пороговая обработка разностного изображения
 diffBW = imbinarize(diffImage, 'adaptive', 'Sensitivity', 0.9, 'ForegroundPolarity', 'bright');
 
 figure;
-disp(diffBW);
+imshow(diffBW);
 title('Binary Difference Image');
 
 % Преобразование RGB изображения в L*a*b* цветовое пространство

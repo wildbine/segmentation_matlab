@@ -1,18 +1,29 @@
-% Чтение изображений до и после деформации
 RGBAfter = imread('54um_50x.tif');
 RGBBefore = imread('before_50x.tif');
 
-% Изменение размера изображения до деформации до размеров изображения после деформации
 RGBBefore = imresize(RGBBefore, [size(RGBAfter, 1), size(RGBAfter, 2)]);
 
-% Преобразование изображений в оттенки серого
 grayAfter = rgb2gray(RGBAfter);
 grayBefore = rgb2gray(RGBBefore);
 
-% Вычисление разностного изображения
-diffImage = imabsdiff(grayAfter, grayBefore);
+% Вычисление текстурных характеристик до деформации
+glcmBefore = graycomatrix(grayBefore, 'Offset', [0 1], 'Symmetric', true);
+statsBefore = graycoprops(glcmBefore, {'Contrast', 'Correlation', 'Energy', 'Homogeneity'});
 
-% Имя файла для GIF
+% Вычисление текстурных характеристик после деформации
+glcmAfter = graycomatrix(grayAfter, 'Offset', [0 1], 'Symmetric', true);
+statsAfter = graycoprops(glcmAfter, {'Contrast', 'Correlation', 'Energy', 'Homogeneity'});
+
+% Вычисление разностного изображения для каждой текстурной характеристики
+diffContrast = abs(statsAfter.Contrast - statsBefore.Contrast);
+diffCorrelation = abs(statsAfter.Correlation - statsBefore.Correlation);
+diffEnergy = abs(statsAfter.Energy - statsBefore.Energy);
+diffHomogeneity = abs(statsAfter.Homogeneity - statsBefore.Homogeneity);
+
+% Объединение разностных изображений
+diffImage = diffContrast + diffCorrelation + diffEnergy + diffHomogeneity;
+diffImage = mat2gray(diffImage); % Нормализация разностного изображения
+
 gifFilename = 'processing_animation.gif';
 
 % Определение параметров для различных шагов обработки
@@ -42,10 +53,6 @@ for sensitivity = sensitivities
             BW = imcomplement(BW);
             BW = BW & diffBW;
 
-            % Этап 1: Отображение порогового разностного изображения
-            captureFrame(h, diffBW, gifFilename, sensitivity, radius, iterations, delayTime, isAppend, 'DifferenceImage');
-            isAppend = true; % Далее использовать append
-
             % Заполнение дыр, очистка границ и эрозия маски
             BW = imfill(BW, 'holes');
             BW = imclearborder(BW, 4);
@@ -56,9 +63,6 @@ for sensitivity = sensitivities
             se = strel('disk', radius);
             BW = imdilate(BW, se);
             BW = imerode(BW, se);
-
-            % Этап 2: Отображение эродированного изображения
-            captureFrame(h, BW, gifFilename, sensitivity, radius, iterations, delayTime, isAppend, 'ErodeMask');
 
             % Удаление мелких компонентов и расширение
             BW = imfill(BW, 'holes');
@@ -72,13 +76,16 @@ for sensitivity = sensitivities
             BW = imfill(BW, 'holes');
             BW = bwareaopen(BW, 500);
 
-            % Этап 3: Отображение итогового изображения
-            captureFrame(h, BW, gifFilename, sensitivity, radius, iterations, delayTime, isAppend, 'Chan-Vese');
+            % Кластеризация
+            [labeledImage, numClusters] = bwlabel(BW);
 
-            maskedImage = RGBAfter;
-            maskedImage(repmat(~BW, [1 1 3])) = 0;
+            % Преобразование кластеров в RGB изображение
+            clusterImage = label2rgb(labeledImage);
 
-            captureFrame(h, maskedImage, gifFilename, sensitivity, radius, iterations, delayTime, isAppend, 'MaskedImage');
+            % Этап: Отображение кластерного изображения
+            captureFrame(h, RGBAfter, clusterImage, gifFilename, sensitivity, radius, iterations, numClusters, delayTime, isAppend);
+            isAppend = true; % Далее использовать append
+
             % Пауза перед переходом к следующему набору параметров
             pauseFrames = pauseTime / delayTime;
         end
@@ -90,19 +97,33 @@ close(h);
 
 disp('GIF создан успешно.');
 
-function captureFrame(h, BW, gifFilename, sensitivity, radius, iterations, delayTime, isAppend, name)
+function captureFrame(h, originalImage, clusterImage, gifFilename, sensitivity, radius, iterations, numClusters, delayTime, isAppend)
     figure(h);
-    imshow(BW, 'InitialMagnification', 'fit');
-    title(sprintf('%s\nSensitivity: %.2f, Radius: %d, Iterations: %d', name, sensitivity, radius, iterations), 'FontSize', 14);
-    set(gca, 'FontSize', 12);
+
+    % Создание подзаголовков
+    subplot(1, 2, 1);
+    imshow(originalImage, 'InitialMagnification', 'fit');
+    title('Original Image', 'FontSize', 14);
+
+    subplot(1, 2, 2);
+    imshow(clusterImage, 'InitialMagnification', 'fit');
+    title(sprintf('Clustered Image\nClusters: %d', numClusters), 'FontSize', 14);
+
+    % Добавление текста с параметрами
+    paramText = annotation('textbox', [0.5, 1, 0, 0], 'string', ...
+        sprintf('Sensitivity: %.2f, Radius: %d, Iterations: %d', sensitivity, radius, iterations), ...
+        'HorizontalAlignment', 'center', 'FontSize', 14, 'FontWeight', 'bold', 'FitBoxToText', 'on', 'EdgeColor', 'none');
+
     frame = getframe(h);
     img = frame2im(frame); % Получение изображения из структуры кадра
     [imind, cm] = rgb2ind(img, 256, 'nodither');
 
-    % Переменная imind определена здесь
     if isAppend
         imwrite(imind, cm, gifFilename, 'gif', 'WriteMode', 'append', 'DelayTime', delayTime);
     else
         imwrite(imind, cm, gifFilename, 'gif', 'Loopcount', inf, 'DelayTime', delayTime);
     end
+    % Удаление аннотации после записи кадра в GIF
+    delete(paramText);
 end
+

@@ -9,8 +9,23 @@ RGBBefore = imresize(RGBBefore, [size(RGBAfter, 1), size(RGBAfter, 2)]);
 grayAfter = rgb2gray(RGBAfter);
 grayBefore = rgb2gray(RGBBefore);
 
-% Вычисление разностного изображения
-diffImage = imabsdiff(grayAfter, grayBefore);
+% Вычисление текстурных характеристик до деформации
+glcmBefore = graycomatrix(grayBefore, 'Offset', [0 1], 'Symmetric', true);
+statsBefore = graycoprops(glcmBefore, {'Contrast', 'Correlation', 'Energy', 'Homogeneity'});
+
+% Вычисление текстурных характеристик после деформации
+glcmAfter = graycomatrix(grayAfter, 'Offset', [0 1], 'Symmetric', true);
+statsAfter = graycoprops(glcmAfter, {'Contrast', 'Correlation', 'Energy', 'Homogeneity'});
+
+% Вычисление разностного изображения для каждой текстурной характеристики
+diffContrast = abs(statsAfter.Contrast - statsBefore.Contrast);
+diffCorrelation = abs(statsAfter.Correlation - statsBefore.Correlation);
+diffEnergy = abs(statsAfter.Energy - statsBefore.Energy);
+diffHomogeneity = abs(statsAfter.Homogeneity - statsBefore.Homogeneity);
+
+% Объединение разностных изображений
+diffImage = diffContrast + diffCorrelation + diffEnergy + diffHomogeneity;
+diffImage = mat2gray(diffImage); % Нормализация разностного изображения
 
 % Имя файла для GIF
 gifFilename = 'smooth_difference_images.gif';
