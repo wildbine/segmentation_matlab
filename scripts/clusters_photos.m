@@ -30,7 +30,7 @@ radii = [3, 6, 9]; % Параметры радиуса для эрозии
 iterationsList = [50, 100, 150]; % Количество итераций для активных контуров
 
 % Создание папки для сохранения изображений
-outputFolder = 'ClusterResults';
+outputFolder = '../ClusterResults';
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
