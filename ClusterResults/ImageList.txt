@@ -1,0 +1,81 @@
+Image 1: Sensitivity: 0.70, Radius: 3, Iterations: 50, Clusters: 94
+Filename: ClusterResult_S0.70_R3_I50.png
+
+Image 2: Sensitivity: 0.70, Radius: 3, Iterations: 100, Clusters: 91
+Filename: ClusterResult_S0.70_R3_I100.png
+
+Image 3: Sensitivity: 0.70, Radius: 3, Iterations: 150, Clusters: 87
+Filename: ClusterResult_S0.70_R3_I150.png
+
+Image 4: Sensitivity: 0.70, Radius: 6, Iterations: 50, Clusters: 55
+Filename: ClusterResult_S0.70_R6_I50.png
+
+Image 5: Sensitivity: 0.70, Radius: 6, Iterations: 100, Clusters: 49
+Filename: ClusterResult_S0.70_R6_I100.png
+
+Image 6: Sensitivity: 0.70, Radius: 6, Iterations: 150, Clusters: 52
+Filename: ClusterResult_S0.70_R6_I150.png
+
+Image 7: Sensitivity: 0.70, Radius: 9, Iterations: 50, Clusters: 35
+Filename: ClusterResult_S0.70_R9_I50.png
+
+Image 8: Sensitivity: 0.70, Radius: 9, Iterations: 100, Clusters: 34
+Filename: ClusterResult_S0.70_R9_I100.png
+
+Image 9: Sensitivity: 0.70, Radius: 9, Iterations: 150, Clusters: 35
+Filename: ClusterResult_S0.70_R9_I150.png
+
+Image 10: Sensitivity: 0.80, Radius: 3, Iterations: 50, Clusters: 94
+Filename: ClusterResult_S0.80_R3_I50.png
+
+Image 11: Sensitivity: 0.80, Radius: 3, Iterations: 100, Clusters: 91
+Filename: ClusterResult_S0.80_R3_I100.png
+
+Image 12: Sensitivity: 0.80, Radius: 3, Iterations: 150, Clusters: 87
+Filename: ClusterResult_S0.80_R3_I150.png
+
+Image 13: Sensitivity: 0.80, Radius: 6, Iterations: 50, Clusters: 55
+Filename: ClusterResult_S0.80_R6_I50.png
+
+Image 14: Sensitivity: 0.80, Radius: 6, Iterations: 100, Clusters: 49
+Filename: ClusterResult_S0.80_R6_I100.png
+
+Image 15: Sensitivity: 0.80, Radius: 6, Iterations: 150, Clusters: 52
+Filename: ClusterResult_S0.80_R6_I150.png
+
+Image 16: Sensitivity: 0.80, Radius: 9, Iterations: 50, Clusters: 35
+Filename: ClusterResult_S0.80_R9_I50.png
+
+Image 17: Sensitivity: 0.80, Radius: 9, Iterations: 100, Clusters: 34
+Filename: ClusterResult_S0.80_R9_I100.png
+
+Image 18: Sensitivity: 0.80, Radius: 9, Iterations: 150, Clusters: 35
+Filename: ClusterResult_S0.80_R9_I150.png
+
+Image 19: Sensitivity: 0.90, Radius: 3, Iterations: 50, Clusters: 94
+Filename: ClusterResult_S0.90_R3_I50.png
+
+Image 20: Sensitivity: 0.90, Radius: 3, Iterations: 100, Clusters: 91
+Filename: ClusterResult_S0.90_R3_I100.png
+
+Image 21: Sensitivity: 0.90, Radius: 3, Iterations: 150, Clusters: 87
+Filename: ClusterResult_S0.90_R3_I150.png
+
+Image 22: Sensitivity: 0.90, Radius: 6, Iterations: 50, Clusters: 55
+Filename: ClusterResult_S0.90_R6_I50.png
+
+Image 23: Sensitivity: 0.90, Radius: 6, Iterations: 100, Clusters: 49
+Filename: ClusterResult_S0.90_R6_I100.png
+
+Image 24: Sensitivity: 0.90, Radius: 6, Iterations: 150, Clusters: 52
+Filename: ClusterResult_S0.90_R6_I150.png
+
+Image 25: Sensitivity: 0.90, Radius: 9, Iterations: 50, Clusters: 35
+Filename: ClusterResult_S0.90_R9_I50.png
+
+Image 26: Sensitivity: 0.90, Radius: 9, Iterations: 100, Clusters: 34
+Filename: ClusterResult_S0.90_R9_I100.png
+
+Image 27: Sensitivity: 0.90, Radius: 9, Iterations: 150, Clusters: 35
+Filename: ClusterResult_S0.90_R9_I150.png
+
