@@ -25,8 +25,8 @@ function [BW, maskedImage, labeledImage, numClusters] = segmentImage(RGBAfter, R
     % Normalize the combined texture difference to the range [0, 1]
     combinedTextureDifference = mat2gray(combinedTextureDifference);
 
-    % Threshold the combined texture difference
-    textureBW = imbinarize(combinedTextureDifference, 'adaptive', 'Sensitivity', 0.9, 'ForegroundPolarity', 'bright');
+    grayAfter = double(grayAfter) / max(double(grayAfter(:)));
+    textureBW = grayAfter > combinedTextureDifference;
 
     % Convert RGB image into L*a*b* color space.
     X = rgb2lab(RGBAfter);

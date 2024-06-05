@@ -1,29 +1,14 @@
 % Чтение изображений до и после деформации
 RGBAfter = imread('../54um_50x.tif');
 RGBBefore = imread('../before_50x.tif');
-
+radius = 6;
+maxNumberOfPixObj = 500;
 % Изменение размера изображения до деформации до размеров изображения после деформации
 RGBBefore = imresize(RGBBefore, [size(RGBAfter, 1), size(RGBAfter, 2)]);
 
 % Преобразование изображений в оттенки серого
 grayAfter = rgb2gray(RGBAfter);
 grayBefore = rgb2gray(RGBBefore);
-
-% Создание фигуры с увеличенными изображениями
-figure;
-set(gcf, 'Position', [400, 50, 600, 300]); % Установка размеров окна фигуры
-
-% Отображение изображения до деформации
-subplot(1, 2, 1);
-imshow(grayBefore, 'InitialMagnification', 'fit'); % Увеличение изображения по размеру подграфика
-title('Grayscale Image Before Deformation', 'FontSize', 14); % Увеличение шрифта заголовка
-set(gca, 'FontSize', 8); % Увеличение шрифта осей
-
-% Отображение изображения после деформации
-subplot(1, 2, 2);
-imshow(grayAfter, 'InitialMagnification', 'fit'); % Увеличение изображения по размеру подграфика
-title('Grayscale Image After Deformation', 'FontSize', 14); % Увеличение шрифта заголовка
-set(gca, 'FontSize', 8); % Увеличение шрифта осей
 
 % Вычисление текстурных характеристик до деформации
 glcmBefore = graycomatrix(grayBefore, 'Offset', [0 1], 'Symmetric', true);
@@ -43,15 +28,11 @@ diffHomogeneity = abs(statsAfter.Homogeneity - statsBefore.Homogeneity);
 diffImage = diffContrast + diffCorrelation + diffEnergy + diffHomogeneity;
 diffImage = mat2gray(diffImage); % Нормализация разностного изображения
 
-figure;
-disp(diffImage);
-title('Difference Image Based on Texture Analysis');
-
 grayAfter = double(grayAfter) / max(double(grayAfter(:)));
 diffBW = grayAfter > diffImage;
 
 X = rgb2lab(RGBAfter);
-BW = imbinarize(rgb2gray(RGBAfter), 'adaptive', 'Sensitivity', 0.63, 'ForegroundPolarity', 'bright');
+BW = imbinarize(grayAfter, 'adaptive', 'Sensitivity', 0.63, 'ForegroundPolarity', 'bright');
 BW = imcomplement(BW);
 BW = BW & diffBW;
 
@@ -62,43 +43,34 @@ title('Initial Binary Mask');
 % Обработка маски
 BW = imfill(BW, 'holes');
 BW = imclearborder(BW, 4);
-radius = 6;
 se = strel('octagon', radius);
 BW = imerode(BW, se);
+
+BW = imfill(BW, 'holes');
+BW = bwareaopen(BW, maxNumberOfPixObj);
+se = strel('disk', (radius>2)*radius + (radius-1<=1)*2);
+BW = imdilate(BW, se);
+BW = imfill(BW, 'holes');
 
 figure;
 imshow(BW);
 title('Eroded Binary Mask');
 
-BW = imfill(BW, 'holes');
-BW = bwareaopen(BW, 500);
-se = strel('disk', 5);
-BW = imdilate(BW, se);
-BW = imfill(BW, 'holes');
-
 % Активные контуры
 iterations = 50;
 BW = activecontour(X, BW, iterations, 'Chan-Vese');
 BW = imfill(BW, 'holes');
-BW = bwareaopen(BW, 500);
+BW = bwareaopen(BW, maxNumberOfPixObj);
 
 figure;
 imshow(BW);
 title('Binary Mask After Active Contour');
 
-% Создание маскированного изображения
-maskedImage = RGBAfter;
-maskedImage(repmat(~BW, [1 1 3])) = 0;
-
-figure;
-imshow(maskedImage);
-title('Masked Image');
-
 % Маркировка связанных компонентов
 [labeledImage, numClusters] = bwlabel(BW);
 
 % Объединение близких кластеров
-minClusterDist = 10;
+minClusterDist = 5;
 stats = regionprops(labeledImage, 'Centroid');
 centroids = cat(1, stats.Centroid);
 for i = 1:numClusters
@@ -117,3 +89,32 @@ numClusters = max(labeledImage(:));
 fprintf('Number of clusters: %d\n', numClusters);
 imshow(label2rgb(labeledImage, 'jet', 'k', 'shuffle'));
 title(sprintf('Segmented Image - Clusters: %d', numClusters));
+
+clusterOverlay = cat(3, zeros(size(labeledImage)), zeros(size(labeledImage)), ones(size(labeledImage)));
+
+% Создание полупрозрачной маски
+alpha = 0.2; % Степень прозрачности
+
+% Создание изображения с наложением кластеров
+overlayImage = im2double(RGBAfter); % Преобразование к double для точных вычислений
+
+% Наложение кластеров на оригинальное изображение с учетом прозрачности
+for i = 1:numClusters
+    % Создание маски для текущего кластера
+    clusterMask = labeledImage == i;
+    clusterOverlayDouble = double(clusterOverlay);
+    % Наложение кластера с учетом прозрачности
+    for j = 1:3
+        overlayImage(:,:,j) = overlayImage(:,:,j) .* ~clusterMask + ...
+                          alpha * clusterOverlayDouble(:,:,j) .* clusterMask + ...
+                          (1 - alpha) * overlayImage(:,:,j) .* clusterMask;
+    end
+end
+
+% Преобразование изображения обратно в uint8 для отображения и сохранения
+overlayImage = im2uint8(overlayImage);
+
+% Отображение исходного изображения и изображения с наложением кластеров
+figure;
+imshow(overlayImage);
+title('Изображение с полупрозрачными кластерами');
